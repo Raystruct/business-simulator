@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Business Simulator — Reseller v0.1</title>
+<style>
+:root{--bg:#0b1020;--panel:#131a2e;--panel2:#1a2340;--text:#edf2ff;--muted:#9ca8c7;--accent:#67e8f9;--green:#67e8a5;--orange:#fbbf75;--red:#fb7185;--line:#2a3555}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#0b1020,#111a30);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:22px 28px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;align-items:center}
+h1{font-size:23px;margin:0 0 4px}.sub{color:var(--muted)}.badge{border:1px solid #31506a;border-radius:999px;padding:7px 12px;color:var(--accent)}
+main{display:grid;grid-template-columns:310px 1fr;gap:18px;padding:18px;max-width:1500px;margin:auto}
+.panel{background:rgba(19,26,46,.95);border:1px solid var(--line);border-radius:14px;padding:16px}
+h2{font-size:15px;margin:0 0 12px}.section{margin-bottom:18px}.row{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;margin:8px 0}.row label{color:#cbd5e1}.row input{width:100%;background:#0d1427;border:1px solid #33415f;color:white;border-radius:8px;padding:8px}
+button{background:#233252;border:1px solid #40537c;color:white;padding:9px 12px;border-radius:8px;cursor:pointer}button:hover{border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:#10172b;border:1px solid var(--line);border-radius:12px;padding:13px}.label{font-size:12px;color:var(--muted)}.value{font-size:22px;font-weight:700;margin-top:4px}.good{color:var(--green)}.warn{color:var(--orange)}.bad{color:var(--red)}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:center;margin:16px 0}.node{background:#10172b;border:1px solid #33415f;border-radius:12px;padding:14px;text-align:center;min-height:78px;display:flex;flex-direction:column;justify-content:center}.arrow{text-align:center;color:var(--accent);font-size:20px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.bar{height:10px;background:#202b48;border-radius:8px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;background:var(--accent)}
+table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid var(--line);text-align:right}td:first-child,th:first-child{text-align:left}.note{font-size:12px;color:var(--muted);line-height:1.5}
+@media(max-width:1000px){main{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<div><h1>🧠 Business Simulator — Reseller</h1><div class="sub">v0.1 • één scherm • geldstroom + voorraad + BTW + winst</div></div>
+<div class="badge">Nederland • 2026 • indicatief</div>
+</header>
+<main>
+<aside>
+<div class="panel">
+<h2>⚙️ Scenario</h2>
+<div class="section">
+<div class="row"><label>Verkoopprijs excl. BTW</label><input id="sale" type="number" value="1000" step="10"></div>
+<div class="row"><label>Inkoopprijs excl. BTW</label><input id="buy" type="number" value="700" step="10"></div>
+<div class="row"><label>Inkooptransport</label><input id="intransport" type="number" value="50" step="5"></div>
+<div class="row"><label>Ontvangst/handling</label><input id="handling" type="number" value="10" step="5"></div>
+<div class="row"><label>Verkooptransport</label><input id="outtransport" type="number" value="30" step="5"></div>
+<div class="row"><label>Overige overhead</label><input id="overhead" type="number" value="80" step="5"></div>
+</div>
+<h2>🧾 BTW</h2>
+<div class="section">
+<div class="row"><label>Verkoop-BTW %</label><input id="vatrate" type="number" value="21" step="1"></div>
+<div class="row"><label>Inkoop-BTW %</label><input id="vatbuy" type="number" value="21" step="1"></div>
+</div>
+<h2>💳 Betaling</h2>
+<div class="section">
+<div class="row"><label>Klant betaalt na (dagen)</label><input id="customerDays" type="number" value="30"></div>
+<div class="row"><label>Leverancier betaald na (dagen)</label><input id="supplierDays" type="number" value="30"></div>
+<div class="row"><label>Start cash</label><input id="cash" type="number" value="5000" step="500"></div>
+</div>
+<h2>🏦 VPB-schatting</h2>
+<div class="section">
+<div class="row"><label>Belastbare winst (sim.)</label><input id="taxable" type="number" value="" placeholder="= winst"></div>
+<div class="row"><label>VPB eerste schijf %</label><input id="tax1" type="number" value="19" step=".1"></div>
+<div class="row"><label>Grens eerste schijf</label><input id="taxlimit" type="number" value="200000" step="1000"></div>
+<div class="row"><label>VPB boven grens %</label><input id="tax2" type="number" value="25.8" step=".1"></div>
+</div>
+<button onclick="resetAll()">↺ Reset voorbeeld</button>
+<p class="note">Dit is een leer- en scenariotool, geen officiële boekhouding of aangiftesoftware. BTW-aftrek, fiscale winst, investeringsaftrek, buitenlandse transacties, loonheffingen enz. zijn in v0.1 nog vereenvoudigd.</p>
+</div>
+</aside>
+
+<section>
+<div class="grid">
+<div class="card"><div class="label">Omzet excl. BTW</div><div class="value" id="revenue"></div></div>
+<div class="card"><div class="label">Brutowinst</div><div class="value good" id="gross"></div></div>
+<div class="card"><div class="label">Marge</div><div class="value" id="margin"></div></div>
+<div class="card"><div class="label">Winst vóór belasting*</div><div class="value" id="profit"></div></div>
+<div class="card"><div class="label">Verkoop-BTW</div><div class="value warn" id="salesVat"></div></div>
+<div class="card"><div class="label">Voorbelasting</div><div class="value" id="inputVat"></div></div>
+<div class="card"><div class="label">BTW saldo*</div><div class="value" id="vatDue"></div></div>
+<div class="card"><div class="label">VPB-schatting*</div><div class="value bad" id="corpTax"></div></div>
+</div>
+
+<div class="panel" style="margin-top:12px">
+<h2>🔄 Goederenstroom</h2>
+<div class="flow">
+<div class="node">🏭 Leverancier<br><b id="buyFlow"></b></div><div class="arrow">→</div>
+<div class="node">📦 Voorraad<br><b id="stockFlow"></b></div><div class="arrow">→</div>
+<div class="node">👤 Klant<br><b id="saleFlow"></b></div>
+</div>
+<div class="two">
+<div>
+<h2>💸 Waar gaat de verkoopprijs heen?</h2>
+<table><tbody>
+<tr><td>Omzet</td><td id="tSale"></td></tr>
+<tr><td>Inkoop</td><td id="tBuy"></td></tr>
+<tr><td>Inkooptransport</td><td id="tIn"></td></tr>
+<tr><td>Ontvangst/handling</td><td id="tHandle"></td></tr>
+<tr><td>Verkooptransport</td><td id="tOut"></td></tr>
+<tr><td>Overhead</td><td id="tOver"></td></tr>
+<tr><th>Winst</th><th id="tProfit"></th></tr>
+</tbody></table>
+</div>
+<div>
+<h2>🏦 BTW-stroom</h2>
+<table><tbody>
+<tr><td>BTW van klant</td><td id="bSale"></td></tr>
+<tr><td>BTW op inkoop</td><td id="bBuy"></td></tr>
+<tr><td>BTW op transport/overhead</td><td id="bCosts"></td></tr>
+<tr><th>Saldo</th><th id="bDue"></th></tr>
+</tbody></table>
+<p class="note">In een echte aangifte kan de uitkomst anders zijn door bijvoorbeeld buitenlandse transacties, vrijgestelde omzet, verleggingsregelingen, niet-aftrekbare BTW en correcties.</p>
+</div>
+</div>
+</div>
+
+<div class="panel" style="margin-top:12px">
+<h2>💰 Cash versus winst</h2>
+<div class="grid">
+<div class="card"><div class="label">Start cash</div><div class="value" id="startCash"></div></div>
+<div class="card"><div class="label">Cash out (incl. BTW)</div><div class="value bad" id="cashOut"></div></div>
+<div class="card"><div class="label">Cash in van klant (incl. BTW)</div><div class="value good" id="cashIn"></div></div>
+<div class="card"><div class="label">Eenvoudige cashpositie*</div><div class="value" id="cashEnd"></div></div>
+</div>
+<p class="note">De cashpositie in v0.1 doet alsof de verkoop en inkopen binnen het scenario worden afgerekend. De ingevulde betalingstermijnen worden alvast getoond als signaal voor werkkapitaal, maar zijn nog geen volledige dag-voor-dag cashflow-engine.</p>
+</div>
+
+<div class="panel" style="margin-top:12px">
+<h2>📊 Werkkapitaal-signaal</h2>
+<div class="grid">
+<div class="card"><div class="label">Klanttermijn</div><div class="value" id="cdays"></div></div>
+<div class="card"><div class="label">Leveranciertermijn</div><div class="value" id="sdays"></div></div>
+<div class="card"><div class="label">Financieringsgat</div><div class="value warn" id="gap"></div></div>
+<div class="card"><div class="label">Voorraad gebonden cash</div><div class="value" id="stockCash"></div></div>
+</div>
+<p class="note">Een langere klanttermijn dan leverancierstermijn kan extra financieringsbehoefte veroorzaken. Dit is één van de redenen waarom winst en cash niet hetzelfde zijn.</p>
+</div>
+
+<p class="note" style="margin:16px 4px">* Vereenvoudigd model. Voor 2026 is de standaard Nederlandse BTW 21%; voor een BV geldt in 2026 19% VPB tot €200.000 belastbaar bedrag en 25,8% daarboven. citeturn0search0turn0search13</p>
+</section>
+</main>
+<script>
+const ids=["sale","buy","intransport","handling","outtransport","overhead","vatrate","vatbuy","customerDays","supplierDays","cash","taxable","tax1","taxlimit","tax2"];
+const €=n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n||0);
+const pct=n=>(n||0).toFixed(1)+"%";
+function n(id){return parseFloat(document.getElementById(id).value)||0}
+function calc(){
+ const sale=n("sale"),buy=n("buy"),tin=n("intransport"),handle=n("handling"),tout=n("outtransport"),over=n("overhead");
+ const vr=n("vatrate")/100,vb=n("vatbuy")/100;
+ const salesVat=sale*vr, inputVat=(buy+tin+handle+tout+over)*vb;
+ const cogs=buy+tin+handle, gross=sale-cogs;
+ const profit=gross-tout-over;
+ const taxable=document.getElementById("taxable").value===""?profit:n("taxable");
+ const lim=n("taxlimit"), t1=n("tax1")/100,t2=n("tax2")/100;
+ const corp=Math.max(0,Math.min(taxable,lim)*t1+Math.max(0,taxable-lim)*t2);
+ const cashIn=sale+salesVat,cashOut=(buy+tin+handle+tout+over)+inputVat;
+ const cashEnd=n("cash")+cashIn-cashOut;
+ const gap=Math.max(0,n("customerDays")-n("supplierDays"));
+ const set=(id,v)=>document.getElementById(id).textContent=v;
+ set("revenue",€(sale));set("gross",€(gross));set("margin",pct(sale?gross/sale*100:0));set("profit",€(profit));
+ set("salesVat",€(salesVat));set("inputVat",€(inputVat));set("vatDue",€(salesVat-inputVat));set("corpTax",€(corp));
+ set("buyFlow",€(buy));set("stockFlow",€(cogs));set("saleFlow",€(sale));
+ set("tSale",€(sale));set("tBuy",€(-buy));set("tIn",€(-tin));set("tHandle",€(-handle));set("tOut",€(-tout));set("tOver",€(-over));set("tProfit",€(profit));
+ set("bSale",€(salesVat));set("bBuy",€(-buy*vb));set("bCosts",€(-(tin+handle+tout+over)*vb));set("bDue",€(salesVat-inputVat));
+ set("startCash",€(n("cash")));set("cashOut",€(cashOut));set("cashIn",€(cashIn));set("cashEnd",€(cashEnd));
+ set("cdays",n("customerDays")+" dagen");set("sdays",n("supplierDays")+" dagen");set("gap",gap+" dagen");set("stockCash",€(cogs));
+}
+ids.forEach(id=>document.getElementById(id).addEventListener("input",calc));
+function resetAll(){location.reload()}
+calc();
+</script>
+</body></html>
